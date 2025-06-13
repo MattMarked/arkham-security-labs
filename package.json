@@ -1,0 +1,12 @@
+{
+  "name": "arkham-security-labs",
+  "version": "1.0.0",
+  "description": "AWS Security That Actually Gets Implemented",
+  "scripts": {
+    "build": "echo 'Static site - no build needed' && exit 0",
+    "dev": "echo 'Static site - open index.html directly'"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
