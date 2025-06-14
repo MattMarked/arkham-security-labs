@@ -152,6 +152,8 @@ body {
 .hero {
     padding: calc(80px + var(--spacing-4xl)) 0 var(--spacing-4xl);
     background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+    position: relative;
+    z-index: 1;
 }
 
 .hero-container {
@@ -262,6 +264,8 @@ body {
 .problem {
     padding: var(--spacing-4xl) 0;
     background: var(--bg-secondary);
+    position: relative;
+    z-index: 2;
 }
 
 .problem-content {
@@ -315,6 +319,8 @@ body {
 /* Solution Section */
 .solution {
     padding: var(--spacing-4xl) 0;
+    position: relative;
+    z-index: 2;
 }
 
 .solution-header {
@@ -375,6 +381,8 @@ body {
 .services {
     padding: var(--spacing-4xl) 0;
     background: var(--bg-secondary);
+    position: relative;
+    z-index: 2;
 }
 
 .services-header {
@@ -491,6 +499,8 @@ body {
 /* Target Audience Section */
 .target-audience {
     padding: var(--spacing-4xl) 0;
+    position: relative;
+    z-index: 2;
 }
 
 .target-audience h2 {
@@ -541,6 +551,8 @@ body {
 .about {
     padding: var(--spacing-4xl) 0;
     background: var(--bg-secondary);
+    position: relative;
+    z-index: 2;
 }
 
 .about-content {
@@ -591,6 +603,8 @@ body {
 /* Process Section */
 .process {
     padding: var(--spacing-4xl) 0;
+    position: relative;
+    z-index: 2;
 }
 
 .process h2 {
@@ -676,6 +690,8 @@ body {
     background: var(--gradient-secondary);
     border-top: 1px solid var(--border-primary);
     border-bottom: 1px solid var(--border-primary);
+    position: relative;
+    z-index: 2;
 }
 
 .cta-content {
@@ -723,6 +739,8 @@ body {
     background: var(--bg-secondary);
     padding: var(--spacing-2xl) 0;
     border-top: 1px solid var(--border-primary);
+    position: relative;
+    z-index: 2;
 }
 
 .footer-content {
