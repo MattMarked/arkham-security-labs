@@ -49,7 +49,8 @@ export default async function handler(req, res) {
       // Update daily stats
       const dailyKey = `daily:${today}`;
       const dailyStatsRaw = await redis.get(dailyKey);
-      const dailyStats = dailyStatsRaw ? JSON.parse(dailyStatsRaw) : {
+      const dailyStats = dailyStatsRaw ? 
+        (typeof dailyStatsRaw === 'string' ? JSON.parse(dailyStatsRaw) : dailyStatsRaw) : {
         date: today,
         pageViews: 0,
         uniqueVisitors: [],
@@ -71,7 +72,8 @@ export default async function handler(req, res) {
       // Update overall stats
       const overallKey = 'overall';
       const overallStatsRaw = await redis.get(overallKey);
-      const overallStats = overallStatsRaw ? JSON.parse(overallStatsRaw) : {
+      const overallStats = overallStatsRaw ? 
+        (typeof overallStatsRaw === 'string' ? JSON.parse(overallStatsRaw) : overallStatsRaw) : {
         totalPageViews: 0,
         totalUniqueVisitors: [],
         totalSessions: [],
@@ -99,7 +101,8 @@ export default async function handler(req, res) {
 
       // Get overall stats
       const overallStatsRaw = await redis.get('overall');
-      const overallStats = overallStatsRaw ? JSON.parse(overallStatsRaw) : {
+      const overallStats = overallStatsRaw ? 
+        (typeof overallStatsRaw === 'string' ? JSON.parse(overallStatsRaw) : overallStatsRaw) : {
         totalPageViews: 0,
         totalUniqueVisitors: [],
         totalSessions: [],
@@ -115,7 +118,8 @@ export default async function handler(req, res) {
         const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
         const dateStr = date.toISOString().split('T')[0];
         const dayStatsRaw = await redis.get(`daily:${dateStr}`);
-        const dayStats = dayStatsRaw ? JSON.parse(dayStatsRaw) : null;
+        const dayStats = dayStatsRaw ? 
+          (typeof dayStatsRaw === 'string' ? JSON.parse(dayStatsRaw) : dayStatsRaw) : null;
         
         if (dayStats) {
           dailyStats[dateStr] = {
