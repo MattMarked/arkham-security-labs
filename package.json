@@ -6,6 +6,9 @@
     "build": "echo 'Static site - no build needed' && exit 0",
     "dev": "echo 'Static site - open index.html directly'"
   },
+  "dependencies": {
+    "@upstash/redis": "^1.28.4"
+  },
   "devDependencies": {
     "vite": "^5.0.0"
   }

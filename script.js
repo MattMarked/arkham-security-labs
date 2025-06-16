@@ -49,8 +49,11 @@ class VisitTracker {
         const isNewSession = !sessionStorage.getItem(this.sessionKey) || 
                             (Date.now() - parseInt(sessionStorage.getItem(this.sessionKey)) > 30 * 60 * 1000); // 30 minutes
         
-        if (isNewSession) {
+        let sessionId = sessionStorage.getItem(this.sessionKey + '_id');
+        if (isNewSession || !sessionId) {
+            sessionId = fingerprint + '_' + Date.now();
             sessionStorage.setItem(this.sessionKey, Date.now().toString());
+            sessionStorage.setItem(this.sessionKey + '_id', sessionId);
             data.sessions++;
         }
         
@@ -78,6 +81,16 @@ class VisitTracker {
         });
         
         this.saveData(data);
+        
+        // Send data to server (non-blocking)
+        this.sendToServer({
+            fingerprint,
+            timestamp: now.toISOString(),
+            userAgent: navigator.userAgent,
+            referrer: document.referrer,
+            page: window.location.pathname,
+            sessionId
+        });
     }
 
     getData() {
@@ -148,6 +161,36 @@ class VisitTracker {
     clearData() {
         localStorage.removeItem(this.storageKey);
         sessionStorage.removeItem(this.sessionKey);
+        sessionStorage.removeItem(this.sessionKey + '_id');
+    }
+
+    // Send data to server (non-blocking)
+    async sendToServer(data) {
+        try {
+            await fetch('/api/analytics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+        } catch (error) {
+            // Silently fail - don't break the user experience
+            console.debug('Analytics tracking failed:', error);
+        }
+    }
+
+    // Fetch server-side analytics (for admin dashboard)
+    async fetchServerStats(range = 30) {
+        try {
+            const response = await fetch(`/api/analytics?range=${range}`);
+            if (response.ok) {
+                return await response.json();
+            }
+        } catch (error) {
+            console.debug('Failed to fetch server stats:', error);
+        }
+        return null;
     }
 }
 

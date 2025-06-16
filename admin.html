@@ -283,75 +283,179 @@
                 localStorage.removeItem(this.storageKey);
                 sessionStorage.removeItem(this.sessionKey);
             }
+
+            // Fetch server-side analytics (for admin dashboard)
+            async fetchServerStats(range = 30) {
+                try {
+                    const response = await fetch(`/api/analytics?range=${range}`);
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                } catch (error) {
+                    console.debug('Failed to fetch server stats:', error);
+                }
+                return null;
+            }
         }
 
         const visitTracker = new VisitTracker();
+        let currentStats = null;
 
-        function displayStats() {
-            const stats = visitTracker.getStats();
+        async function displayStats() {
             const statsGrid = document.getElementById('statsGrid');
             
+            // Show loading state
             statsGrid.innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-number">${stats.totalPageViews}</div>
-                    <div class="stat-label">Total Page Views</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${stats.totalSessions}</div>
-                    <div class="stat-label">Total Sessions</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${stats.uniqueVisitors}</div>
-                    <div class="stat-label">Unique Visitors</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${stats.todayVisits}</div>
-                    <div class="stat-label">Today's Visits</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${stats.yesterdayVisits}</div>
-                    <div class="stat-label">Yesterday's Visits</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${new Date(stats.firstVisit).toLocaleDateString()}</div>
-                    <div class="stat-label">First Visit</div>
+                    <div class="stat-number">...</div>
+                    <div class="stat-label">Loading...</div>
                 </div>
             `;
+            
+            try {
+                // Try to fetch server-side stats first
+                const serverStats = await visitTracker.fetchServerStats(30);
+                
+                if (serverStats) {
+                    currentStats = serverStats;
+                    const today = new Date().toISOString().split('T')[0];
+                    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-number">${serverStats.overall.totalPageViews}</div>
+                            <div class="stat-label">Total Page Views</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${serverStats.overall.totalSessions}</div>
+                            <div class="stat-label">Total Sessions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${serverStats.overall.totalUniqueVisitors}</div>
+                            <div class="stat-label">Unique Visitors</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${serverStats.daily[today]?.pageViews || 0}</div>
+                            <div class="stat-label">Today's Visits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${serverStats.daily[yesterday]?.pageViews || 0}</div>
+                            <div class="stat-label">Yesterday's Visits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${serverStats.summary.last7Days}</div>
+                            <div class="stat-label">Last 7 Days</div>
+                        </div>
+                    `;
+                } else {
+                    // Fallback to local stats
+                    const stats = visitTracker.getStats();
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.totalPageViews}</div>
+                            <div class="stat-label">Total Page Views (Local)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.totalSessions}</div>
+                            <div class="stat-label">Total Sessions (Local)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.uniqueVisitors}</div>
+                            <div class="stat-label">Unique Visitors (Local)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.todayVisits}</div>
+                            <div class="stat-label">Today's Visits (Local)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.yesterdayVisits}</div>
+                            <div class="stat-label">Yesterday's Visits (Local)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${new Date(stats.firstVisit).toLocaleDateString()}</div>
+                            <div class="stat-label">First Visit (Local)</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">Error</div>
+                        <div class="stat-label">Failed to load stats</div>
+                    </div>
+                `;
+            }
         }
 
         function displayChart() {
-            const stats = visitTracker.getStats();
-            const dailyVisits = stats.dailyVisits;
             const chartContainer = document.getElementById('dailyChart');
             
-            if (Object.keys(dailyVisits).length === 0) {
-                chartContainer.innerHTML = '<div class="no-data">No visit data available yet</div>';
-                return;
-            }
-
-            // Get last 30 days
-            const days = [];
-            const now = new Date();
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-                days.push(date.toDateString());
-            }
-
-            const maxVisits = Math.max(...days.map(day => dailyVisits[day] || 0));
-            
-            chartContainer.innerHTML = days.map(day => {
-                const visits = dailyVisits[day] || 0;
-                const height = maxVisits > 0 ? (visits / maxVisits) * 180 : 0;
-                const date = new Date(day);
-                const label = `${date.getMonth() + 1}/${date.getDate()}`;
+            if (currentStats && currentStats.daily) {
+                const dailyData = currentStats.daily;
                 
-                return `
-                    <div class="bar" style="height: ${height}px;">
-                        <div class="bar-value">${visits}</div>
-                        <div class="bar-label">${label}</div>
-                    </div>
-                `;
-            }).join('');
+                if (Object.keys(dailyData).length === 0) {
+                    chartContainer.innerHTML = '<div class="no-data">No visit data available yet</div>';
+                    return;
+                }
+
+                // Get last 30 days
+                const days = [];
+                const now = new Date();
+                for (let i = 29; i >= 0; i--) {
+                    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                    days.push(date.toISOString().split('T')[0]);
+                }
+
+                const maxVisits = Math.max(...days.map(day => dailyData[day]?.pageViews || 0));
+                
+                chartContainer.innerHTML = days.map(day => {
+                    const visits = dailyData[day]?.pageViews || 0;
+                    const height = maxVisits > 0 ? (visits / maxVisits) * 180 : 0;
+                    const date = new Date(day);
+                    const label = `${date.getMonth() + 1}/${date.getDate()}`;
+                    
+                    return `
+                        <div class="bar" style="height: ${height}px;">
+                            <div class="bar-value">${visits}</div>
+                            <div class="bar-label">${label}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                // Fallback to local data
+                const stats = visitTracker.getStats();
+                const dailyVisits = stats.dailyVisits;
+                
+                if (Object.keys(dailyVisits).length === 0) {
+                    chartContainer.innerHTML = '<div class="no-data">No visit data available yet</div>';
+                    return;
+                }
+
+                // Get last 30 days
+                const days = [];
+                const now = new Date();
+                for (let i = 29; i >= 0; i--) {
+                    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                    days.push(date.toDateString());
+                }
+
+                const maxVisits = Math.max(...days.map(day => dailyVisits[day] || 0));
+                
+                chartContainer.innerHTML = days.map(day => {
+                    const visits = dailyVisits[day] || 0;
+                    const height = maxVisits > 0 ? (visits / maxVisits) * 180 : 0;
+                    const date = new Date(day);
+                    const label = `${date.getMonth() + 1}/${date.getDate()}`;
+                    
+                    return `
+                        <div class="bar" style="height: ${height}px;">
+                            <div class="bar-value">${visits}</div>
+                            <div class="bar-label">${label}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
         }
 
         function refreshStats() {
@@ -360,7 +464,7 @@
         }
 
         function exportData() {
-            const data = visitTracker.exportData();
+            const data = currentStats || visitTracker.exportData();
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -381,9 +485,14 @@
         }
 
         // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            refreshStats();
+        document.addEventListener('DOMContentLoaded', async function() {
+            await refreshStats();
         });
+        
+        async function refreshStats() {
+            await displayStats();
+            displayChart();
+        }
     </script>
 </body>
 </html>
