@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visit Analytics - Arkham Security Labs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #8b5cf6;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #14b8a6;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #a3a3a3;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            color: #e5e5e5;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .chart {
+            display: flex;
+            align-items: end;
+            height: 200px;
+            gap: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .bar {
+            background: linear-gradient(to top, #8b5cf6, #14b8a6);
+            border-radius: 2px 2px 0 0;
+            min-width: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #a3a3a3;
+            white-space: nowrap;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: #e5e5e5;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .bar:hover .bar-value {
+            opacity: 1;
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #7c3aed;
+        }
+
+        .btn-secondary {
+            background: #333;
+            color: #e5e5e5;
+            border: 1px solid #555;
+        }
+
+        .btn-secondary:hover {
+            background: #444;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .info-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .info-section h3 {
+            color: #14b8a6;
+            margin-bottom: 1rem;
+        }
+
+        .info-section p {
+            color: #a3a3a3;
+            margin-bottom: 0.5rem;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #a3a3a3;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Visit Analytics Dashboard</h1>
+        
+        <div class="stats-grid" id="statsGrid">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+
+        <div class="chart-container">
+            <h3 class="chart-title">Daily Visits (Last 30 Days)</h3>
+            <div class="chart" id="dailyChart">
+                <!-- Chart will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="refreshStats()">🔄 Refresh</button>
+            <button class="btn btn-secondary" onclick="exportData()">📥 Export Data</button>
+            <button class="btn btn-danger" onclick="clearData()">🗑️ Clear All Data</button>
+        </div>
+
+        <div class="info-section">
+            <h3>How This Works</h3>
+            <p><strong>Client-Side Tracking:</strong> All data is stored locally in your visitors' browsers using localStorage.</p>
+            <p><strong>Privacy-Friendly:</strong> No external services, no cookies, no personal data collection.</p>
+            <p><strong>Unique Visitors:</strong> Estimated using browser fingerprinting (screen size, timezone, user agent).</p>
+            <p><strong>Sessions:</strong> New session after 30 minutes of inactivity.</p>
+            <p><strong>Data Retention:</strong> Daily visit data is kept for 30 days automatically.</p>
+            <p><strong>Limitations:</strong> Data resets if visitors clear their browser data. Only tracks visitors with JavaScript enabled.</p>
+        </div>
+    </div>
+
+    <script>
+        // Simple Visit Tracking System (same as main site)
+        class VisitTracker {
+            constructor() {
+                this.storageKey = 'arkham_visit_data';
+                this.sessionKey = 'arkham_session';
+            }
+
+            getData() {
+                const defaultData = {
+                    pageViews: 0,
+                    sessions: 0,
+                    uniqueVisitors: [],
+                    dailyVisits: {},
+                    firstVisit: new Date().toISOString(),
+                    lastVisit: new Date().toISOString()
+                };
+                
+                try {
+                    const stored = localStorage.getItem(this.storageKey);
+                    return stored ? { ...defaultData, ...JSON.parse(stored) } : defaultData;
+                } catch (e) {
+                    return defaultData;
+                }
+            }
+
+            getStats() {
+                const data = this.getData();
+                const today = new Date().toDateString();
+                const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+                
+                return {
+                    totalPageViews: data.pageViews,
+                    totalSessions: data.sessions,
+                    uniqueVisitors: data.uniqueVisitors.length,
+                    todayVisits: data.dailyVisits[today] || 0,
+                    yesterdayVisits: data.dailyVisits[yesterday] || 0,
+                    firstVisit: data.firstVisit,
+                    lastVisit: data.lastVisit,
+                    dailyVisits: data.dailyVisits
+                };
+            }
+
+            exportData() {
+                return this.getData();
+            }
+
+            clearData() {
+                localStorage.removeItem(this.storageKey);
+                sessionStorage.removeItem(this.sessionKey);
+            }
+        }
+
+        const visitTracker = new VisitTracker();
+
+        function displayStats() {
+            const stats = visitTracker.getStats();
+            const statsGrid = document.getElementById('statsGrid');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalPageViews}</div>
+                    <div class="stat-label">Total Page Views</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.totalSessions}</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.uniqueVisitors}</div>
+                    <div class="stat-label">Unique Visitors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.todayVisits}</div>
+                    <div class="stat-label">Today's Visits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.yesterdayVisits}</div>
+                    <div class="stat-label">Yesterday's Visits</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${new Date(stats.firstVisit).toLocaleDateString()}</div>
+                    <div class="stat-label">First Visit</div>
+                </div>
+            `;
+        }
+
+        function displayChart() {
+            const stats = visitTracker.getStats();
+            const dailyVisits = stats.dailyVisits;
+            const chartContainer = document.getElementById('dailyChart');
+            
+            if (Object.keys(dailyVisits).length === 0) {
+                chartContainer.innerHTML = '<div class="no-data">No visit data available yet</div>';
+                return;
+            }
+
+            // Get last 30 days
+            const days = [];
+            const now = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                days.push(date.toDateString());
+            }
+
+            const maxVisits = Math.max(...days.map(day => dailyVisits[day] || 0));
+            
+            chartContainer.innerHTML = days.map(day => {
+                const visits = dailyVisits[day] || 0;
+                const height = maxVisits > 0 ? (visits / maxVisits) * 180 : 0;
+                const date = new Date(day);
+                const label = `${date.getMonth() + 1}/${date.getDate()}`;
+                
+                return `
+                    <div class="bar" style="height: ${height}px;">
+                        <div class="bar-value">${visits}</div>
+                        <div class="bar-label">${label}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function refreshStats() {
+            displayStats();
+            displayChart();
+        }
+
+        function exportData() {
+            const data = visitTracker.exportData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `arkham-visit-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear all visit data? This cannot be undone.')) {
+                visitTracker.clearData();
+                refreshStats();
+                alert('All visit data has been cleared.');
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStats();
+        });
+    </script>
+</body>
+</html>
