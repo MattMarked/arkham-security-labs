@@ -223,12 +223,16 @@
 
         <div class="info-section">
             <h3>How This Works</h3>
-            <p><strong>Client-Side Tracking:</strong> All data is stored locally in your visitors' browsers using localStorage.</p>
-            <p><strong>Privacy-Friendly:</strong> No external services, no cookies, no personal data collection.</p>
-            <p><strong>Unique Visitors:</strong> Estimated using browser fingerprinting (screen size, timezone, user agent).</p>
-            <p><strong>Sessions:</strong> New session after 30 minutes of inactivity.</p>
-            <p><strong>Data Retention:</strong> Daily visit data is kept for 30 days automatically.</p>
-            <p><strong>Limitations:</strong> Data resets if visitors clear their browser data. Only tracks visitors with JavaScript enabled.</p>
+            <p><strong>Dual Tracking System:</strong> Combines client-side (localStorage) and server-side (Upstash Redis) tracking for comprehensive analytics.</p>
+            <p><strong>Client-Side Tracking:</strong> Stores individual browser data locally using localStorage as a backup and for immediate access.</p>
+            <p><strong>Server-Side Tracking:</strong> Aggregates data from ALL visitors in Upstash Redis database via Vercel serverless API (/api/analytics).</p>
+            <p><strong>Privacy-Friendly:</strong> No cookies, no personal data collection. Uses anonymized browser fingerprints only.</p>
+            <p><strong>Cross-Device Access:</strong> Server data persists across devices and survives browser clearing, accessible from any device.</p>
+            <p><strong>Automatic Fallback:</strong> Shows local data with "(Local)" labels when server is unavailable.</p>
+            <p><strong>Browser Fingerprinting:</strong> Creates unique IDs using screen size, timezone, user agent, and canvas rendering.</p>
+            <p><strong>Session Management:</strong> New session after 30 minutes of inactivity, tracked via sessionStorage.</p>
+            <p><strong>Data Retention:</strong> Server stores data for 30 days with automatic cleanup. Local data also kept for 30 days.</p>
+            <p><strong>Real-Time Updates:</strong> Data flows from browser → Vercel API → Upstash Redis → Dashboard display.</p>
         </div>
     </div>
 
